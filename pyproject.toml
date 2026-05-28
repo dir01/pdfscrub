@@ -1,0 +1,28 @@
+[project]
+name = "pdfscrub"
+version = "0.1.0"
+description = "Search and redact text from PDF files"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "click>=8.4.1",
+    "pymupdf>=1.27.2.3",
+]
+
+[project.scripts]
+pdfscrub = "pdfscrub.cli:cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pdfscrub"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
