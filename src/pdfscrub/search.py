@@ -1,6 +1,25 @@
 import fitz
 
 
+def image_only_pages(pdf_path: str) -> list[int]:
+    """
+    Return 1-based page numbers that appear to be image-only (no text layer).
+    A page qualifies when it contains at least one image and zero text characters,
+    which is the signature of a scanned page that hasn't been OCR'd.
+    """
+    unreadable: list[int] = []
+    doc = fitz.open(pdf_path)
+    try:
+        for page in doc:
+            has_images = bool(page.get_images())
+            has_text = bool(page.get_text().strip())
+            if has_images and not has_text:
+                unreadable.append(page.number + 1)
+    finally:
+        doc.close()
+    return unreadable
+
+
 def search_pdf(pdf_path: str, terms: list[str], case_sensitive: bool = False) -> dict[int, list[tuple[str, fitz.Rect]]]:
     """
     Search for terms in a PDF. Returns a dict mapping 1-based page numbers to
