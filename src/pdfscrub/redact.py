@@ -1,5 +1,9 @@
 import random
+import re
+
 import fitz
+
+from .search import term_variants
 
 
 def redact_pdf(
@@ -69,6 +73,9 @@ def _scrub_metadata(doc: fitz.Document, terms: list[str]) -> None:
             continue
         new_value = value
         for term in terms:
-            new_value = new_value.replace(term, "[REDACTED]")
+            for variant in term_variants(term):
+                new_value = re.sub(
+                    re.escape(variant), "[REDACTED]", new_value, flags=re.IGNORECASE
+                )
         cleaned[field] = new_value
     doc.set_metadata(cleaned)

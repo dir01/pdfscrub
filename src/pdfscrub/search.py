@@ -1,4 +1,14 @@
+from urllib.parse import quote, quote_plus
+
 import fitz
+
+
+def term_variants(term: str) -> list[str]:
+    """
+    Return the term plus its URL-encoded forms, so terms embedded in URLs
+    (e.g. "01/02/2000" appearing as "01%2F02%2F2000") are still matched.
+    """
+    return list({term, quote(term, safe=""), quote_plus(term)})
 
 
 def image_only_pages(pdf_path: str) -> list[int]:
@@ -84,11 +94,15 @@ def search_metadata(pdf_path: str, terms: list[str], case_sensitive: bool = Fals
     for field, value in meta.items():
         if not value:
             continue
+        haystack = value if case_sensitive else value.lower()
         for term in terms:
-            needle = term if case_sensitive else term.lower()
-            haystack = value if case_sensitive else value.lower()
-            if needle in haystack:
-                hits[field] = value
-                break
+            for variant in term_variants(term):
+                needle = variant if case_sensitive else variant.lower()
+                if needle in haystack:
+                    hits[field] = value
+                    break
+            else:
+                continue
+            break
 
     return hits

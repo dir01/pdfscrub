@@ -94,3 +94,33 @@ def test_metadata_search(tmp_path):
 
     hits = search_metadata(pdf, ["John Doe"])
     assert "author" in hits
+
+
+def make_meta_pdf(path: str, title: str) -> None:
+    doc = fitz.open()
+    doc.new_page()
+    doc.set_metadata({"title": title})
+    doc.save(path)
+    doc.close()
+
+
+def test_metadata_scrub_is_case_insensitive(tmp_path):
+    pdf = str(tmp_path / "meta.pdf")
+    out = str(tmp_path / "out.pdf")
+    make_meta_pdf(pdf, "report about john doe (lowercase)")
+
+    redact_pdf(pdf, out, ["John Doe"])
+
+    assert search_metadata(out, ["John Doe"]) == {}
+
+
+def test_metadata_scrub_catches_url_encoded_terms(tmp_path):
+    pdf = str(tmp_path / "meta.pdf")
+    out = str(tmp_path / "out.pdf")
+    make_meta_pdf(pdf, "https://example.com/?dob=01%2F02%2F2000&name=john+doe")
+
+    assert search_metadata(pdf, ["01/02/2000", "John Doe"])  # detected before scrub
+
+    redact_pdf(pdf, out, ["01/02/2000", "John Doe"])
+
+    assert search_metadata(out, ["01/02/2000", "John Doe"]) == {}
